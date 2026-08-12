@@ -22,26 +22,54 @@ docs/openapi.yaml    API契約
 Dockerfile           フロントとバックエンドの統合イメージ
 ```
 
-## ローカル実行
+## ローカル起動方法
 
-必要環境は Node.js 22、Go 1.26、MariaDB 11です。
+### 前提環境
+
+- Node.js 22
+- Go 1.26
+- Docker Desktop（MariaDB 11 の起動に使用）
+
+以下は、すべてプロジェクトルート（このREADMEがあるディレクトリ）を起点に実行します。3つのターミナルを使用してください。
+
+### 1. MariaDBを起動する（ターミナル1）
 
 ```powershell
 cd backend
 docker compose up -d
+```
+
+### 2. バックエンドを起動する（ターミナル2）
+
+```powershell
+cd backend
 $env:DATABASE_URL='mariadb://shojin:replace-me@localhost:3306/atcoder_shojin'
 go run .
 ```
 
-別のターミナルで:
+起動後、`http://localhost:8080/healthz` でヘルスチェックを確認できます。APIのベースURLは `http://localhost:8080/apis` です。
+
+### 3. フロントエンドを起動する（ターミナル3）
 
 ```powershell
 cd react-sample-app
 npm ci
-npm run dev
+$env:REACT_APP_API_BASE_URL='http://localhost:8080/apis'
+npm start
 ```
 
-フロントエンドは `http://localhost:3000`、APIは `http://localhost:8080/apis` です。環境変数は `backend/.env.example` と `react-sample-app/.env.example` を参照してください。
+ブラウザで `http://localhost:3000` を開いてください。`npm ci` は初回起動時、または依存関係が変わったときに実行すれば十分です。
+
+環境変数の設定例は `backend/.env.example` と `react-sample-app/.env.example` にあります。
+
+### 停止方法
+
+バックエンドとフロントエンドは、それぞれのターミナルで `Ctrl+C` を押して停止します。MariaDBは次のコマンドで停止します。
+
+```powershell
+cd backend
+docker compose down
+```
 
 ## テスト
 
@@ -66,4 +94,3 @@ npm run build
 ## 外部API上の制約
 
 AtCoder Problemsは非公式APIで、提出APIは一度に最大500件です。初回Startでは過去提出を差分キャッシュへ同期するため、提出数に応じて開始まで時間がかかる場合があります。またAtCoder Problems側の反映遅延により、AC表示が遅れる場合があります。
-
