@@ -227,7 +227,7 @@ func (repository *Repository) ApplySessionAcceptances(ctx context.Context, sessi
 	}
 	defer tx.Rollback()
 	var session training.Session
-	err = tx.GetContext(ctx, &session, `SELECT id,started_at,duration_seconds FROM training_sessions WHERE id=? FOR UPDATE`, sessionID)
+	err = tx.GetContext(ctx, &session, `SELECT id,started_at,duration_seconds,ended_at,status FROM training_sessions WHERE id=? FOR UPDATE`, sessionID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return training.ErrSessionNotFound
 	}

@@ -27,3 +27,15 @@ func TestAcceptedDuringSessionUsesHalfOpenTimeRange(t *testing.T) {
 		})
 	}
 }
+
+func TestAcceptedDuringSessionStopsAtAbortTime(t *testing.T) {
+	startedAt := time.Unix(1_000, 0).UTC()
+	abortedAt := time.Unix(1_100, 0).UTC()
+	session := Session{StartedAt: startedAt, DurationSeconds: 4_500, Status: StatusAborted, EndedAt: &abortedAt}
+	if !AcceptedDuringSession(session, Submission{EpochSecond: 1_099, Result: "AC"}) {
+		t.Fatal("AC before abort should count")
+	}
+	if AcceptedDuringSession(session, Submission{EpochSecond: 1_100, Result: "AC"}) {
+		t.Fatal("AC at or after abort must not count")
+	}
+}

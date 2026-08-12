@@ -129,7 +129,11 @@ func AcceptedDuringSession(session Session, submission Submission) bool {
 		return false
 	}
 	acceptedAt := time.Unix(submission.EpochSecond, 0).UTC()
-	return !acceptedAt.Before(session.StartedAt) && acceptedAt.Before(session.Deadline())
+	cutoff := session.Deadline()
+	if session.Status == StatusAborted && session.EndedAt != nil && session.EndedAt.Before(cutoff) {
+		cutoff = *session.EndedAt
+	}
+	return !acceptedAt.Before(session.StartedAt) && acceptedAt.Before(cutoff)
 }
 
 type SyncState struct {
