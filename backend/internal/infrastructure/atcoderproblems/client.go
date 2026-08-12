@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 )
 
 const defaultBaseURL = "https://kenkoooo.com/atcoder"
+
+var abcContestID = regexp.MustCompile(`^abc[0-9]+$`)
 
 type Client struct {
 	baseURL    string
@@ -41,6 +44,11 @@ type problemJSON struct {
 	Index     string `json:"problem_index"`
 	Name      string `json:"name"`
 }
+type contestProblemJSON struct {
+	ContestID string `json:"contest_id"`
+	ProblemID string `json:"problem_id"`
+	Index     string `json:"problem_index"`
+}
 type modelJSON struct {
 	Difficulty *int `json:"difficulty"`
 }
@@ -60,22 +68,43 @@ func (client *Client) FetchCatalog(ctx context.Context) ([]training.Contest, []t
 	if err := client.getJSON(ctx, "/resources/problems.json", &rawProblems); err != nil {
 		return nil, nil, err
 	}
+	var pairs []contestProblemJSON
+	if err := client.getJSON(ctx, "/resources/contest-problem.json", &pairs); err != nil {
+		return nil, nil, err
+	}
 	var models map[string]modelJSON
 	if err := client.getJSON(ctx, "/resources/problem-models.json", &models); err != nil {
 		return nil, nil, err
 	}
 	counts := map[string]int{}
-	for _, problem := range rawProblems {
-		counts[problem.ContestID]++
+	for _, pair := range pairs {
+		counts[pair.ContestID]++
 	}
 	contests := make([]training.Contest, 0, len(rawContests))
+	abcContests := make(map[string]struct{})
 	for _, contest := range rawContests {
+		if !abcContestID.MatchString(contest.ID) {
+			continue
+		}
+		abcContests[contest.ID] = struct{}{}
 		contests = append(contests, training.Contest{ID: contest.ID, Title: contest.Title, StartTime: time.Unix(contest.StartEpochSecond, 0).UTC(), DurationSecond: contest.DurationSecond, ProblemCount: counts[contest.ID]})
 	}
-	problems := make([]training.Problem, 0, len(rawProblems))
+	metadata := make(map[string]problemJSON, len(rawProblems))
 	for _, problem := range rawProblems {
-		model := models[problem.ID]
-		problems = append(problems, training.Problem{ID: problem.ID, ContestID: problem.ContestID, Index: problem.Index, Title: problem.Name, Difficulty: model.Difficulty})
+		metadata[problem.ID] = problem
+	}
+	problems := make([]training.Problem, 0, len(pairs))
+	for _, pair := range pairs {
+		if _, exists := abcContests[pair.ContestID]; !exists || (pair.Index != "D" && pair.Index != "E" && pair.Index != "F") {
+			continue
+		}
+		problem := metadata[pair.ProblemID]
+		title := problem.Name
+		if title == "" {
+			title = pair.ProblemID
+		}
+		model := models[pair.ProblemID]
+		problems = append(problems, training.Problem{ID: pair.ProblemID, ContestID: pair.ContestID, Index: pair.Index, Title: title, Difficulty: model.Difficulty})
 	}
 	return contests, problems, nil
 }
