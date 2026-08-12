@@ -9,6 +9,7 @@ export interface TrainingProblem {
   title: string;
   difficulty?: number;
   acceptedAt?: string;
+  penaltyCount: number;
   url: string;
 }
 

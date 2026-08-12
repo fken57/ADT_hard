@@ -74,16 +74,17 @@ type Problem struct {
 }
 
 type SessionProblem struct {
-	ID         string     `json:"id" db:"id"`
-	SessionID  string     `json:"-" db:"session_id"`
-	Slot       string     `json:"slot" db:"slot"`
-	ContestID  string     `json:"contestId" db:"contest_id"`
-	ProblemID  string     `json:"problemId" db:"problem_id"`
-	Index      string     `json:"problemIndex" db:"problem_index"`
-	Title      string     `json:"title" db:"title"`
-	Difficulty *int       `json:"difficulty,omitempty" db:"difficulty"`
-	AcceptedAt *time.Time `json:"acceptedAt,omitempty" db:"accepted_at"`
-	URL        string     `json:"url" db:"-"`
+	ID           string     `json:"id" db:"id"`
+	SessionID    string     `json:"-" db:"session_id"`
+	Slot         string     `json:"slot" db:"slot"`
+	ContestID    string     `json:"contestId" db:"contest_id"`
+	ProblemID    string     `json:"problemId" db:"problem_id"`
+	Index        string     `json:"problemIndex" db:"problem_index"`
+	Title        string     `json:"title" db:"title"`
+	Difficulty   *int       `json:"difficulty,omitempty" db:"difficulty"`
+	AcceptedAt   *time.Time `json:"acceptedAt,omitempty" db:"accepted_at"`
+	PenaltyCount int        `json:"penaltyCount" db:"penalty_count"`
+	URL          string     `json:"url" db:"-"`
 }
 
 func (problem SessionProblem) Link() string {
@@ -125,15 +126,16 @@ type Submission struct {
 }
 
 func AcceptedDuringSession(session Session, submission Submission) bool {
-	if submission.Result != "AC" {
-		return false
-	}
-	acceptedAt := time.Unix(submission.EpochSecond, 0).UTC()
+	return submission.Result == "AC" && SubmissionDuringSession(session, submission)
+}
+
+func SubmissionDuringSession(session Session, submission Submission) bool {
+	submittedAt := time.Unix(submission.EpochSecond, 0).UTC()
 	cutoff := session.Deadline()
 	if session.Status == StatusAborted && session.EndedAt != nil && session.EndedAt.Before(cutoff) {
 		cutoff = *session.EndedAt
 	}
-	return !acceptedAt.Before(session.StartedAt) && acceptedAt.Before(cutoff)
+	return !submittedAt.Before(session.StartedAt) && submittedAt.Before(cutoff)
 }
 
 type SyncState struct {

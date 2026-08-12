@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SessionHistoryResponse } from '../types/Training';
 import { trainingApi } from '../util/TrainingApi';
+import { orderedProblems } from '../components/Training/ProblemList';
 
 export function History() {
   const [data, setData] = useState<SessionHistoryResponse | null>(null);
@@ -17,11 +18,20 @@ export function History() {
     <section className="history-page">
       <p className="eyebrow">HISTORY</p><h1>トレーニング履歴</h1>
       {data.sessions.length === 0 ? <p className="muted">まだ終了したセッションはありません。</p> : <ul className="history-list">
-        {data.sessions.map(session => <li key={session.id}><Link to={`/history/${session.id}`}>
-          <span>{new Date(session.startedAt).toLocaleDateString('ja-JP')}</span>
-          <strong>{session.problems.filter(problem => problem.acceptedAt).length}/{session.problems.length} AC</strong>
-          <em>{session.status === 'ABORTED' ? '中断' : '終了'}</em>
-        </Link></li>)}
+        {data.sessions.map(session => <li key={session.id}>
+          <Link className="history-summary" to={`/history/${session.id}`}>
+            <span>{new Date(session.startedAt).toLocaleString('ja-JP')}</span>
+            <strong>{session.problems.filter(problem => problem.acceptedAt).length}/{session.problems.length} AC</strong>
+            <em>{session.status === 'ABORTED' ? '中断' : '終了'}</em>
+          </Link>
+          <div className="history-problems" aria-label="出題された問題">
+            {orderedProblems(session.problems).map(problem =>
+              <a key={problem.id} href={problem.url} target="_blank" rel="noreferrer" title={`${problem.contestId} ${problem.problemIndex}: ${problem.title}`}>
+                <strong>{problem.slot}</strong><span>{problem.contestId} {problem.problemIndex}</span><span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </li>)}
       </ul>}
       <div className="pagination">
         <button disabled={page <= 1} onClick={() => setPage(current => current - 1)}>前へ</button>

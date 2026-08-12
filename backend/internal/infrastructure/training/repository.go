@@ -190,7 +190,13 @@ func (repository *Repository) loadSession(ctx context.Context, id string) (train
 	if err != nil {
 		return training.Session{}, err
 	}
-	err = repository.db.SelectContext(ctx, &session.Problems, `SELECT id,session_id,slot,contest_id,problem_id,problem_index,title,difficulty,accepted_at FROM training_problems WHERE session_id=? ORDER BY FIELD(slot,'D1','E1','E2','E3','F1')`, id)
+	err = repository.db.SelectContext(ctx, &session.Problems, `SELECT tp.id,tp.session_id,tp.slot,tp.contest_id,tp.problem_id,tp.problem_index,tp.title,tp.difficulty,tp.accepted_at,
+		CASE WHEN tp.accepted_at IS NULL THEN 0 ELSE (
+			SELECT COUNT(*) FROM training_problem_submissions tps
+			WHERE tps.session_id=tp.session_id AND tps.problem_id=tp.problem_id
+			AND tps.result<>'AC' AND tps.submitted_at<tp.accepted_at
+		) END AS penalty_count
+		FROM training_problems tp WHERE tp.session_id=? ORDER BY FIELD(tp.slot,'D1','E1','E2','E3','F1')`, id)
 	for index := range session.Problems {
 		session.Problems[index].URL = session.Problems[index].Link()
 	}
@@ -235,13 +241,20 @@ func (repository *Repository) ApplySessionAcceptances(ctx context.Context, sessi
 		return err
 	}
 	for _, item := range submissions {
-		acceptedAt := time.Unix(item.EpochSecond, 0).UTC()
-		if !training.AcceptedDuringSession(session, item) {
+		if !training.SubmissionDuringSession(session, item) {
 			continue
 		}
-		_, err = tx.ExecContext(ctx, `UPDATE training_problems SET accepted_at=CASE WHEN accepted_at IS NULL OR ? < accepted_at THEN ? ELSE accepted_at END,updated_at=? WHERE session_id=? AND problem_id=?`, acceptedAt, acceptedAt, now, sessionID, item.ProblemID)
+		submittedAt := time.Unix(item.EpochSecond, 0).UTC()
+		_, err = tx.ExecContext(ctx, `INSERT IGNORE INTO training_problem_submissions(session_id,problem_id,submission_id,submitted_at,result)
+			SELECT session_id,problem_id,?,?,? FROM training_problems WHERE session_id=? AND problem_id=?`, item.ID, submittedAt, item.Result, sessionID, item.ProblemID)
 		if err != nil {
 			return err
+		}
+		if item.Result == "AC" {
+			_, err = tx.ExecContext(ctx, `UPDATE training_problems SET accepted_at=CASE WHEN accepted_at IS NULL OR ? < accepted_at THEN ? ELSE accepted_at END,updated_at=? WHERE session_id=? AND problem_id=?`, submittedAt, submittedAt, now, sessionID, item.ProblemID)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if err = finishExpired(ctx, tx, now); err != nil {

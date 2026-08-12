@@ -39,3 +39,10 @@ func TestAcceptedDuringSessionStopsAtAbortTime(t *testing.T) {
 		t.Fatal("AC at or after abort must not count")
 	}
 }
+
+func TestSubmissionDuringSessionIncludesWrongAnswers(t *testing.T) {
+	session := Session{StartedAt: time.Unix(1_000, 0).UTC(), DurationSeconds: 4_500}
+	if !SubmissionDuringSession(session, Submission{EpochSecond: 1_001, Result: "WA"}) {
+		t.Fatal("a wrong answer during the session should be tracked for penalties")
+	}
+}

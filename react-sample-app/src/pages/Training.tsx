@@ -3,14 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Countdown } from '../components/Training/Countdown';
 import { ProblemList } from '../components/Training/ProblemList';
 import { secondsRemaining, useCountdown, useServerOffset } from '../hooks/Training/useCountdown';
-import { SessionResponse, TrainingSession } from '../types/Training';
+import { SessionResponse } from '../types/Training';
 import { trainingApi } from '../util/TrainingApi';
-
-function elapsedLabel(session: TrainingSession, acceptedAt?: string): string | null {
-  if (!acceptedAt) return null;
-  const seconds = Math.max(0, Math.floor((new Date(acceptedAt).getTime() - new Date(session.startedAt).getTime()) / 1000));
-  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
-}
 
 export function Training() {
   const { id = '' } = useParams();
@@ -82,10 +76,7 @@ export function Training() {
       <h1>集中して、1問ずつ。</h1>
       <p className="muted">{session.atcoderUserId} · {session.problems.filter(problem => problem.acceptedAt).length} / {session.problems.length} AC</p>
       {error && <p className="notice warning" role="alert">{error}</p>}
-      <ProblemList problems={session.problems} />
-      <div className="accepted-times" aria-label="解答時間">
-        {session.problems.filter(problem => problem.acceptedAt).map(problem => <span key={problem.id}>{problem.slot}: {elapsedLabel(session, problem.acceptedAt)}</span>)}
-      </div>
+      <ProblemList problems={session.problems} startedAt={session.startedAt} />
       <button className="button text-button" disabled={aborting} onClick={abort}>{aborting ? '中断中…' : 'このセッションを中断する'}</button>
     </section>
   );

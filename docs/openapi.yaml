@@ -118,7 +118,7 @@ components:
         message: {type: string}
     SessionProblem:
       type: object
-      required: [id, slot, contestId, problemId, problemIndex, title, url]
+      required: [id, slot, contestId, problemId, problemIndex, title, penaltyCount, url]
       properties:
         id: {type: string, format: uuid}
         slot: {type: string, enum: [D1, E1, E2, E3, F1]}
@@ -128,6 +128,7 @@ components:
         title: {type: string}
         difficulty: {type: integer}
         acceptedAt: {type: string, format: date-time}
+        penaltyCount: {type: integer, minimum: 0, description: Wrong submissions before the first AC during this session}
         url: {type: string, format: uri}
     Session:
       type: object
@@ -164,4 +165,3 @@ components:
         pageSize: {type: integer}
         total: {type: integer}
         serverNow: {type: string, format: date-time}
-

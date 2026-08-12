@@ -5,7 +5,7 @@ import { Training } from './Training';
 const session = {
   id: 'session-1', atcoderUserId: 'fken_prime_57', startedAt: '2026-01-01T00:00:00.000Z', durationSeconds: 4500,
   status: 'ACTIVE' as const, fallbackLevel: 0, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
-  problems: [{ id: 'p1', slot: 'D1', contestId: 'ABC999', problemId: 'abc999_d', problemIndex: 'D', title: 'Visible after start', url: 'https://atcoder.jp/contests/abc999/tasks/abc999_d' }],
+  problems: [{ id: 'p1', slot: 'D1', contestId: 'ABC999', problemId: 'abc999_d', problemIndex: 'D', title: 'Visible after start', penaltyCount: 0, url: 'https://atcoder.jp/contests/abc999/tasks/abc999_d' }],
 };
 
 function json(status: number, body?: unknown): Promise<Response> {
