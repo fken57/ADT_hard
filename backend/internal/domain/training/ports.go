@@ -25,7 +25,8 @@ type AtCoderClient interface {
 	FetchSubmissions(ctx context.Context, userID string, fromSecond int64) ([]Submission, error)
 }
 
-type RandomSource interface { Shuffle(n int, swap func(i, j int)) }
+type RandomSource interface {
+	Shuffle(n int, swap func(i, j int))
+}
 
 func NewRandomSource(seed int64) RandomSource { return rand.New(rand.NewSource(seed)) }
-

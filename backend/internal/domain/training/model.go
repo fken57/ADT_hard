@@ -12,12 +12,12 @@ const (
 )
 
 var (
-	ErrActiveSessionExists = errors.New("an active training session already exists")
-	ErrAbortCooldown       = errors.New("a new training cannot start before the aborted session deadline")
+	ErrActiveSessionExists   = errors.New("an active training session already exists")
+	ErrAbortCooldown         = errors.New("a new training cannot start before the aborted session deadline")
 	ErrProblemSetUnavailable = errors.New("could not generate a valid problem set")
-	ErrSessionNotFound     = errors.New("training session not found")
-	ErrSessionNotActive    = errors.New("training session is not active")
-	ErrExternalDataStale   = errors.New("required AtCoder data could not be refreshed")
+	ErrSessionNotFound       = errors.New("training session not found")
+	ErrSessionNotActive      = errors.New("training session is not active")
+	ErrExternalDataStale     = errors.New("required AtCoder data could not be refreshed")
 )
 
 type SlotConfig struct {
@@ -31,9 +31,9 @@ type Config struct {
 	UserID                string
 	Duration              time.Duration
 	ExcludeLatestContests int
-	CatalogTTL             time.Duration
-	PollInterval           time.Duration
-	Slots                  []SlotConfig
+	CatalogTTL            time.Duration
+	PollInterval          time.Duration
+	Slots                 []SlotConfig
 }
 
 func DefaultConfig() Config {
@@ -52,11 +52,11 @@ func DefaultConfig() Config {
 }
 
 type Contest struct {
-	ID           string    `json:"id" db:"id"`
-	Title        string    `json:"title" db:"title"`
-	StartTime    time.Time `json:"startTime" db:"start_time"`
-	DurationSecond int64   `json:"durationSecond" db:"duration_second"`
-	ProblemCount int       `json:"problemCount" db:"problem_count"`
+	ID             string    `json:"id" db:"id"`
+	Title          string    `json:"title" db:"title"`
+	StartTime      time.Time `json:"startTime" db:"start_time"`
+	DurationSecond int64     `json:"durationSecond" db:"duration_second"`
+	ProblemCount   int       `json:"problemCount" db:"problem_count"`
 }
 
 func (contest Contest) EndTime() time.Time {
@@ -64,13 +64,13 @@ func (contest Contest) EndTime() time.Time {
 }
 
 type Problem struct {
-	ID          string `json:"problemId" db:"problem_id"`
-	ContestID   string `json:"contestId" db:"contest_id"`
-	Index       string `json:"problemIndex" db:"problem_index"`
-	Title       string `json:"title" db:"title"`
-	Difficulty  *int   `json:"difficulty" db:"difficulty"`
+	ID           string    `json:"problemId" db:"problem_id"`
+	ContestID    string    `json:"contestId" db:"contest_id"`
+	Index        string    `json:"problemIndex" db:"problem_index"`
+	Title        string    `json:"title" db:"title"`
+	Difficulty   *int      `json:"difficulty" db:"difficulty"`
 	ContestStart time.Time `json:"-" db:"contest_start_time"`
-	ProblemCount int `json:"-" db:"problem_count"`
+	ProblemCount int       `json:"-" db:"problem_count"`
 }
 
 type SessionProblem struct {
@@ -83,9 +83,10 @@ type SessionProblem struct {
 	Title      string     `json:"title" db:"title"`
 	Difficulty *int       `json:"difficulty,omitempty" db:"difficulty"`
 	AcceptedAt *time.Time `json:"acceptedAt,omitempty" db:"accepted_at"`
+	URL        string     `json:"url" db:"-"`
 }
 
-func (problem SessionProblem) URL() string {
+func (problem SessionProblem) Link() string {
 	return "https://atcoder.jp/contests/" + problem.ContestID + "/tasks/" + problem.ProblemID
 }
 
@@ -109,7 +110,9 @@ func (session Session) Deadline() time.Time {
 func (session Session) AcceptedCount() int {
 	count := 0
 	for _, problem := range session.Problems {
-		if problem.AcceptedAt != nil { count++ }
+		if problem.AcceptedAt != nil {
+			count++
+		}
 	}
 	return count
 }
@@ -121,6 +124,14 @@ type Submission struct {
 	Result      string
 }
 
+func AcceptedDuringSession(session Session, submission Submission) bool {
+	if submission.Result != "AC" {
+		return false
+	}
+	acceptedAt := time.Unix(submission.EpochSecond, 0).UTC()
+	return !acceptedAt.Before(session.StartedAt) && acceptedAt.Before(session.Deadline())
+}
+
 type SyncState struct {
 	LastSubmissionEpoch int64
 	LastSuccessfulAt    *time.Time
@@ -128,8 +139,7 @@ type SyncState struct {
 
 type SessionPage struct {
 	Sessions []Session `json:"sessions"`
-	Page int `json:"page"`
-	PageSize int `json:"pageSize"`
-	Total int `json:"total"`
+	Page     int       `json:"page"`
+	PageSize int       `json:"pageSize"`
+	Total    int       `json:"total"`
 }
-
