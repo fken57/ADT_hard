@@ -1,0 +1,167 @@
+openapi: 3.1.0
+info:
+  title: AtCoder Shojin API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      responses:
+        '200': {description: Healthy}
+        '503': {description: Database unavailable}
+  /apis/training/sessions:
+    post:
+      operationId: startTraining
+      responses:
+        '201':
+          description: Training started atomically
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SessionResponse'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+    get:
+      operationId: listTrainingSessions
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, minimum: 1, default: 1}
+      responses:
+        '200':
+          description: Session history
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HistoryResponse'}
+  /apis/training/sessions/active:
+    get:
+      operationId: getActiveTraining
+      responses:
+        '200':
+          description: Active training
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SessionResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /apis/training/sessions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      operationId: getTrainingSession
+      responses:
+        '200':
+          description: Session detail
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SessionResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /apis/training/sessions/{id}/sync:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: syncTrainingSubmissions
+      description: External API failures are represented by submissionSync.status=STALE while the saved session remains available.
+      responses:
+        '200':
+          description: Current session and synchronization state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SessionResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /apis/training/sessions/{id}/abort:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      operationId: abortTraining
+      responses:
+        '200':
+          description: Aborted session
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SessionResponse'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+components:
+  parameters:
+    SessionId:
+      in: path
+      name: id
+      required: true
+      schema: {type: string, format: uuid}
+  responses:
+    NotFound:
+      description: Not found
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Conflict:
+      description: State conflict
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Unprocessable:
+      description: A valid five-problem set could not be generated
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Unavailable:
+      description: Required external data could not be refreshed
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string}
+    SyncInfo:
+      type: object
+      required: [status]
+      properties:
+        status: {type: string, enum: [OK, STALE]}
+        lastSuccessfulAt: {type: string, format: date-time}
+        message: {type: string}
+    SessionProblem:
+      type: object
+      required: [id, slot, contestId, problemId, problemIndex, title, url]
+      properties:
+        id: {type: string, format: uuid}
+        slot: {type: string, enum: [D1, E1, E2, E3, F1]}
+        contestId: {type: string}
+        problemId: {type: string}
+        problemIndex: {type: string, enum: [D, E, F]}
+        title: {type: string}
+        difficulty: {type: integer}
+        acceptedAt: {type: string, format: date-time}
+        url: {type: string, format: uri}
+    Session:
+      type: object
+      required: [id, atcoderUserId, startedAt, durationSeconds, status, fallbackLevel, createdAt, updatedAt, problems]
+      properties:
+        id: {type: string, format: uuid}
+        atcoderUserId: {type: string, const: fken_prime_57}
+        startedAt: {type: string, format: date-time}
+        durationSeconds: {type: integer, const: 4500}
+        endedAt: {type: string, format: date-time}
+        status: {type: string, enum: [ACTIVE, FINISHED, ABORTED]}
+        fallbackLevel: {type: integer, minimum: 0, maximum: 3}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+        problems:
+          type: array
+          maxItems: 5
+          items: {$ref: '#/components/schemas/SessionProblem'}
+    SessionResponse:
+      type: object
+      required: [session, serverNow, submissionSync]
+      properties:
+        session: {$ref: '#/components/schemas/Session'}
+        serverNow: {type: string, format: date-time}
+        submissionSync: {$ref: '#/components/schemas/SyncInfo'}
+    HistoryResponse:
+      type: object
+      required: [sessions, page, pageSize, total, serverNow]
+      properties:
+        sessions:
+          type: array
+          items: {$ref: '#/components/schemas/Session'}
+        page: {type: integer}
+        pageSize: {type: integer}
+        total: {type: integer}
+        serverNow: {type: string, format: date-time}
+
