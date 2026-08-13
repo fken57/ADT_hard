@@ -121,7 +121,7 @@ components:
       required: [id, slot, contestId, problemId, problemIndex, title, penaltyCount, url]
       properties:
         id: {type: string, format: uuid}
-        slot: {type: string, enum: [D1, E1, E2, E3, F1]}
+        slot: {type: string, enum: [Warmup, Stable, Main, Stretch, Challenge, D1, E1, E2, E3, F1]}
         contestId: {type: string}
         problemId: {type: string}
         problemIndex: {type: string, enum: [D, E, F]}
@@ -132,7 +132,7 @@ components:
         url: {type: string, format: uri}
     Session:
       type: object
-      required: [id, atcoderUserId, startedAt, durationSeconds, status, fallbackLevel, createdAt, updatedAt, problems]
+      required: [id, atcoderUserId, startedAt, durationSeconds, status, fallbackLevel, difficultyProfile, createdAt, updatedAt, problems]
       properties:
         id: {type: string, format: uuid}
         atcoderUserId: {type: string, const: fken_prime_57}
@@ -141,6 +141,7 @@ components:
         endedAt: {type: string, format: date-time}
         status: {type: string, enum: [ACTIVE, FINISHED, ABORTED]}
         fallbackLevel: {type: integer, minimum: 0, maximum: 3}
+        difficultyProfile: {type: string, enum: [STANDARD, LIGHT, HEAVY, LEGACY]}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
         problems:

@@ -1,6 +1,6 @@
 import { TrainingProblem } from '../../types/Training';
 
-const slotOrder = ['D1', 'E1', 'E2', 'E3', 'F1'];
+const slotOrder = ['Warmup', 'Stable', 'Main', 'Stretch', 'Challenge', 'D1', 'E1', 'E2', 'E3', 'F1'];
 
 export function orderedProblems(problems: TrainingProblem[]): TrainingProblem[] {
   return [...problems].sort((left, right) => {
@@ -21,7 +21,7 @@ export function ProblemList({ problems, startedAt }: { problems: TrainingProblem
     <ol className="problem-list">
       {orderedProblems(problems).map((problem) => (
         <li key={problem.id} className={problem.acceptedAt ? 'accepted' : ''}>
-          <span className="slot">{problem.slot}</span>
+          <span className="slot">{problem.slot}<small>diff {problem.difficulty ?? '—'}</small></span>
           <a href={problem.url} target="_blank" rel="noreferrer" className="problem-title">
             {problem.contestId} {problem.problemIndex}: {problem.title}
           </a>

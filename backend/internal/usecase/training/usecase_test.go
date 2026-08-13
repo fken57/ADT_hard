@@ -74,6 +74,7 @@ func (repo *fakeRepository) AbortSession(context.Context, string, time.Time) err
 
 type fixedRandom struct{}
 
+func (fixedRandom) Intn(_ int) int                  { return 0 }
 func (fixedRandom) Shuffle(_ int, _ func(i, j int)) {}
 func difficulty(value int) *int                     { return &value }
 

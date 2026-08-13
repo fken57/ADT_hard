@@ -38,11 +38,11 @@ export function Home() {
   return (
     <section className="home-page">
       <p className="eyebrow">ADT VIRTUAL CONTEST</p>
-      <h1>毎日75分、D/E/Fを解く。</h1>
-      <p className="lede">固定セットを引き当てるのではなく、あなたのAC履歴を除外して新しい5問を作成します。</p>
+      <h1>毎日75分、ちょうどいい5問を。</h1>
+      <p className="lede">あなたのAC履歴を除外し、目標diff 900〜1700を段階的に上げた5問を作成します。</p>
       <div className="session-config" aria-label="セッション設定">
         <div><strong>75</strong><span>分</span><small>制限時間</small></div>
-        <div><strong>D1</strong><span>・E3・F1</span><small>出題構成</small></div>
+        <div><strong>diff</strong><span>優先</span><small>標準70%・軽め/重め各15%</small></div>
         <div><strong>5</strong><span>問</span><small>同一ABCは重複なし</small></div>
       </div>
       {error && <p className="notice warning" role="alert">{error}</p>}

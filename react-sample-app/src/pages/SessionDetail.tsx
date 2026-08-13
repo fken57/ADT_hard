@@ -18,6 +18,7 @@ export function SessionDetail({ result = false }: { result?: boolean }) {
   const { session } = data;
   const accepted = session.problems.filter(problem => problem.acceptedAt).length;
   const penalties = session.problems.reduce((total, problem) => total + (problem.acceptedAt ? problem.penaltyCount : 0), 0);
+  const profileLabel = { STANDARD: '標準', LIGHT: '軽め', HEAVY: '重め', LEGACY: '旧構成' }[session.difficultyProfile] || session.difficultyProfile;
   const categories = ['D', 'E', 'F'].map(index => {
     const problems = session.problems.filter(problem => problem.problemIndex === index);
     return { index, accepted: problems.filter(problem => problem.acceptedAt).length, total: problems.length };
@@ -30,7 +31,7 @@ export function SessionDetail({ result = false }: { result?: boolean }) {
       <div className="category-scores" aria-label="カテゴリ別結果">
         {categories.map(category => <span key={category.index}><strong>{category.index}</strong> {category.accepted} / {category.total}</span>)}
       </div>
-      <p className="muted">{new Date(session.startedAt).toLocaleString('ja-JP')} 開始 · 難易度緩和レベル {session.fallbackLevel}</p>
+      <p className="muted">{new Date(session.startedAt).toLocaleString('ja-JP')} 開始 · {profileLabel} · 難易度緩和レベル {session.fallbackLevel}</p>
       <ProblemList problems={session.problems} startedAt={session.startedAt} />
       <Link className="button primary" to="/">次のトレーニングへ</Link>
       <Link className="history-link" to="/history">履歴を見る →</Link>

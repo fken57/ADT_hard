@@ -136,7 +136,7 @@ func (repository *Repository) CreateSession(ctx context.Context, session trainin
 	if count > 0 {
 		return training.ErrAbortCooldown
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO training_sessions(id,atcoder_user_id,started_at,duration_seconds,ended_at,status,fallback_level,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)`, session.ID, session.AtCoderUserID, session.StartedAt, session.DurationSeconds, session.EndedAt, session.Status, session.FallbackLevel, session.CreatedAt, session.UpdatedAt)
+	_, err = tx.ExecContext(ctx, `INSERT INTO training_sessions(id,atcoder_user_id,started_at,duration_seconds,ended_at,status,fallback_level,difficulty_profile,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)`, session.ID, session.AtCoderUserID, session.StartedAt, session.DurationSeconds, session.EndedAt, session.Status, session.FallbackLevel, session.DifficultyProfile, session.CreatedAt, session.UpdatedAt)
 	if err != nil {
 		var mysqlError *mysql.MySQLError
 		if errors.As(err, &mysqlError) && mysqlError.Number == 1062 {
@@ -183,7 +183,7 @@ func (repository *Repository) GetSession(ctx context.Context, id string, now tim
 
 func (repository *Repository) loadSession(ctx context.Context, id string) (training.Session, error) {
 	var session training.Session
-	err := repository.db.GetContext(ctx, &session, `SELECT id,atcoder_user_id,started_at,duration_seconds,ended_at,status,fallback_level,created_at,updated_at FROM training_sessions WHERE id=?`, id)
+	err := repository.db.GetContext(ctx, &session, `SELECT id,atcoder_user_id,started_at,duration_seconds,ended_at,status,fallback_level,difficulty_profile,created_at,updated_at FROM training_sessions WHERE id=?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return training.Session{}, training.ErrSessionNotFound
 	}
@@ -196,7 +196,7 @@ func (repository *Repository) loadSession(ctx context.Context, id string) (train
 			WHERE tps.session_id=tp.session_id AND tps.problem_id=tp.problem_id
 			AND tps.result<>'AC' AND tps.submitted_at<tp.accepted_at
 		) END AS penalty_count
-		FROM training_problems tp WHERE tp.session_id=? ORDER BY FIELD(tp.slot,'D1','E1','E2','E3','F1')`, id)
+		FROM training_problems tp WHERE tp.session_id=? ORDER BY FIELD(tp.slot,'Warmup','Stable','Main','Stretch','Challenge','D1','E1','E2','E3','F1')`, id)
 	for index := range session.Problems {
 		session.Problems[index].URL = session.Problems[index].Link()
 	}

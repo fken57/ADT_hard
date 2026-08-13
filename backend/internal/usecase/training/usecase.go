@@ -56,11 +56,15 @@ func (usecase *Usecase) Start(ctx context.Context) (SessionResponse, error) {
 	if err != nil {
 		return SessionResponse{}, err
 	}
-	selected, level, err := training.SelectProblemSet(usecase.config, candidates, usecase.random())
+	random := usecase.random()
+	profile := training.SelectDifficultyProfile(usecase.config.DifficultyProfiles, random)
+	selectionConfig := usecase.config
+	selectionConfig.Slots = profile.Slots
+	selected, level, err := training.SelectProblemSet(selectionConfig, candidates, random)
 	if err != nil {
 		return SessionResponse{}, err
 	}
-	session := training.Session{ID: uuid.NewString(), AtCoderUserID: usecase.config.UserID, StartedAt: now, DurationSeconds: int(usecase.config.Duration / time.Second), Status: training.StatusActive, FallbackLevel: level, CreatedAt: now, UpdatedAt: now, Problems: make([]training.SessionProblem, 0, len(selected))}
+	session := training.Session{ID: uuid.NewString(), AtCoderUserID: usecase.config.UserID, StartedAt: now, DurationSeconds: int(usecase.config.Duration / time.Second), Status: training.StatusActive, FallbackLevel: level, DifficultyProfile: profile.Name, CreatedAt: now, UpdatedAt: now, Problems: make([]training.SessionProblem, 0, len(selected))}
 	for _, item := range selected {
 		problem := training.SessionProblem{ID: uuid.NewString(), SessionID: session.ID, Slot: item.Slot.Name, ContestID: item.Problem.ContestID, ProblemID: item.Problem.ID, Index: item.Problem.Index, Title: item.Problem.Title, Difficulty: item.Problem.Difficulty}
 		problem.URL = problem.Link()

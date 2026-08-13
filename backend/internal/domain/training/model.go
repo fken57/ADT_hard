@@ -21,10 +21,16 @@ var (
 )
 
 type SlotConfig struct {
-	Name          string `json:"name"`
-	ProblemIndex  string `json:"index"`
-	DifficultyMin int    `json:"difficultyMin"`
-	DifficultyMax int    `json:"difficultyMax"`
+	Name             string   `json:"name"`
+	AllowedIndexes   []string `json:"allowedIndexes"`
+	TargetDifficulty int      `json:"targetDifficulty"`
+	Tolerance        int      `json:"tolerance"`
+}
+
+type DifficultyProfile struct {
+	Name   string
+	Weight int
+	Slots  []SlotConfig
 }
 
 type Config struct {
@@ -34,20 +40,31 @@ type Config struct {
 	CatalogTTL            time.Duration
 	PollInterval          time.Duration
 	Slots                 []SlotConfig
+	DifficultyProfiles    []DifficultyProfile
 }
 
 func DefaultConfig() Config {
+	standard := difficultySlots(0)
 	return Config{
 		UserID: "fken_prime_57", Duration: 75 * time.Minute,
 		ExcludeLatestContests: 10, CatalogTTL: 24 * time.Hour,
 		PollInterval: 15 * time.Second,
-		Slots: []SlotConfig{
-			{Name: "D1", ProblemIndex: "D", DifficultyMin: 900, DifficultyMax: 1300},
-			{Name: "E1", ProblemIndex: "E", DifficultyMin: 1100, DifficultyMax: 1450},
-			{Name: "E2", ProblemIndex: "E", DifficultyMin: 1300, DifficultyMax: 1600},
-			{Name: "E3", ProblemIndex: "E", DifficultyMin: 1450, DifficultyMax: 1750},
-			{Name: "F1", ProblemIndex: "F", DifficultyMin: 1500, DifficultyMax: 1900},
+		Slots:        standard,
+		DifficultyProfiles: []DifficultyProfile{
+			{Name: "STANDARD", Weight: 70, Slots: standard},
+			{Name: "LIGHT", Weight: 15, Slots: difficultySlots(-100)},
+			{Name: "HEAVY", Weight: 15, Slots: difficultySlots(100)},
 		},
+	}
+}
+
+func difficultySlots(offset int) []SlotConfig {
+	return []SlotConfig{
+		{Name: "Warmup", AllowedIndexes: []string{"D", "E"}, TargetDifficulty: 900 + offset, Tolerance: 125},
+		{Name: "Stable", AllowedIndexes: []string{"D", "E"}, TargetDifficulty: 1150 + offset, Tolerance: 125},
+		{Name: "Main", AllowedIndexes: []string{"E"}, TargetDifficulty: 1300 + offset, Tolerance: 125},
+		{Name: "Stretch", AllowedIndexes: []string{"E", "F"}, TargetDifficulty: 1500 + offset, Tolerance: 125},
+		{Name: "Challenge", AllowedIndexes: []string{"E", "F"}, TargetDifficulty: 1700 + offset, Tolerance: 125},
 	}
 }
 
@@ -92,16 +109,17 @@ func (problem SessionProblem) Link() string {
 }
 
 type Session struct {
-	ID              string           `json:"id" db:"id"`
-	AtCoderUserID   string           `json:"atcoderUserId" db:"atcoder_user_id"`
-	StartedAt       time.Time        `json:"startedAt" db:"started_at"`
-	DurationSeconds int              `json:"durationSeconds" db:"duration_seconds"`
-	EndedAt         *time.Time       `json:"endedAt,omitempty" db:"ended_at"`
-	Status          string           `json:"status" db:"status"`
-	FallbackLevel   int              `json:"fallbackLevel" db:"fallback_level"`
-	CreatedAt       time.Time        `json:"createdAt" db:"created_at"`
-	UpdatedAt       time.Time        `json:"updatedAt" db:"updated_at"`
-	Problems        []SessionProblem `json:"problems"`
+	ID                string           `json:"id" db:"id"`
+	AtCoderUserID     string           `json:"atcoderUserId" db:"atcoder_user_id"`
+	StartedAt         time.Time        `json:"startedAt" db:"started_at"`
+	DurationSeconds   int              `json:"durationSeconds" db:"duration_seconds"`
+	EndedAt           *time.Time       `json:"endedAt,omitempty" db:"ended_at"`
+	Status            string           `json:"status" db:"status"`
+	FallbackLevel     int              `json:"fallbackLevel" db:"fallback_level"`
+	DifficultyProfile string           `json:"difficultyProfile" db:"difficulty_profile"`
+	CreatedAt         time.Time        `json:"createdAt" db:"created_at"`
+	UpdatedAt         time.Time        `json:"updatedAt" db:"updated_at"`
+	Problems          []SessionProblem `json:"problems"`
 }
 
 func (session Session) Deadline() time.Time {

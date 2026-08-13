@@ -70,11 +70,12 @@ export function Training() {
 
   if (!data) return <p className="loading">セッションを読み込んでいます…</p>;
   const { session } = data;
+  const profileLabel = { STANDARD: '標準', LIGHT: '軽め', HEAVY: '重め', LEGACY: '旧構成' }[session.difficultyProfile] || session.difficultyProfile;
   return (
     <section className="training-page">
       <div className="training-topline"><p>TRAINING IN PROGRESS</p><Countdown seconds={remaining} /></div>
       <h1>集中して、1問ずつ。</h1>
-      <p className="muted">{session.atcoderUserId} · {session.problems.filter(problem => problem.acceptedAt).length} / {session.problems.length} AC</p>
+      <p className="muted">{session.atcoderUserId} · {profileLabel} · {session.problems.filter(problem => problem.acceptedAt).length} / {session.problems.length} AC</p>
       {error && <p className="notice warning" role="alert">{error}</p>}
       <ProblemList problems={session.problems} startedAt={session.startedAt} />
       <button className="button text-button" disabled={aborting} onClick={abort}>{aborting ? '中断中…' : 'このセッションを中断する'}</button>

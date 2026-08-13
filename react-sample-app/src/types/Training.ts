@@ -21,6 +21,7 @@ export interface TrainingSession {
   endedAt?: string;
   status: SessionStatus;
   fallbackLevel: number;
+  difficultyProfile: 'STANDARD' | 'LIGHT' | 'HEAVY' | 'LEGACY' | string;
   createdAt: string;
   updatedAt: string;
   problems: TrainingProblem[];
