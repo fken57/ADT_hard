@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.vscode
+
+backend/.cache
+backend/*.log
+
+react-sample-app/build
+react-sample-app/coverage
+react-sample-app/node_modules
+
+**/.env
+**/.DS_Store

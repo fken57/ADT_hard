@@ -20,6 +20,7 @@ backend/             Go / Echo API、domain/usecase/infrastructure、MariaDB mig
 react-sample-app/    React / TypeScript SPA
 docs/openapi.yaml    API契約
 Dockerfile           フロントとバックエンドの統合イメージ
+Dockerfile.backend   NeoShowcase向けバックエンド単体イメージ
 ```
 
 ## ローカル起動方法
@@ -69,6 +70,32 @@ npm start
 ブラウザで `http://localhost:3000` を開いてください。`npm ci` は初回起動時、または依存関係が変わったときに実行すれば十分です。
 
 環境変数の設定例は `backend/.env.example` と `react-sample-app/.env.example` にあります。
+
+## NeoShowcaseへの分割デプロイ
+
+同じリポジトリから、フロントエンドとバックエンドを別アプリとして作成します。
+
+### フロントエンド
+
+- デプロイ形式: 静的サイト
+- ビルド形式: コマンド
+- ベースイメージ: `node:22-alpine`
+- ビルドコマンド: `cd react-sample-app && npm ci && npm run build`
+- 成果物: `react-sample-app/build`
+- SPA: 有効
+- 環境変数: `REACT_APP_API_BASE_URL=https://<バックエンドのドメイン>/apis`
+
+### バックエンド
+
+- デプロイ形式: ランタイム
+- ビルド形式: Dockerfile
+- Dockerfile: `Dockerfile.backend`
+- ビルドコンテキスト: `.`
+- 公開ポート: `8080`
+- MariaDB: 有効
+- 環境変数: `APP_ENV=production`、`PORT=8080`、`FRONTEND_ORIGIN=https://<フロントエンドのドメイン>`
+
+NeoShowcaseが自動注入する `NS_MARIADB_*` から接続URLを組み立てるため、NeoShowcase上では `DATABASE_URL` の手動設定は不要です。
 
 ### 停止方法
 
