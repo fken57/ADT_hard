@@ -44,7 +44,7 @@ docker compose up -d
 ```powershell
 cd backend
 $env:DATABASE_URL='mariadb://shojin:replace-me@localhost:3306/atcoder_shojin'
-go run .
+go run .C:\Users\kenta\maimai_puzzle\SPECIFICATION_V2.md
 ```
 
 起動後、`http://localhost:8080/healthz` でヘルスチェックを確認できます。APIのベースURLは `http://localhost:8080/apis` です。
