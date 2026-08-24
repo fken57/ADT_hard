@@ -1,6 +1,5 @@
 # AtCoder Shojin
 
-`fken_prime_57` 向けに、未ACの AtCoder Beginner Contest D/E/F 問題を75分で解くトレーニングアプリです。
 
 ## v1 の動作
 
