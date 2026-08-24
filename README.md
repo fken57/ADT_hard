@@ -36,18 +36,26 @@ Dockerfile           フロントとバックエンドの統合イメージ
 
 ```powershell
 cd backend
-docker compose up -d
+docker compose up -d mariadb
 ```
+
+MariaDBの初回起動には少し時間がかかる場合があります。起動状態は `docker compose ps` で確認できます。
 
 ### 2. バックエンドを起動する（ターミナル2）
 
 ```powershell
 cd backend
 $env:DATABASE_URL='mariadb://shojin:replace-me@localhost:3306/atcoder_shojin'
-go run .C:\Users\kenta\maimai_puzzle\SPECIFICATION_V2.md
+go run .
 ```
 
-起動後、`http://localhost:8080/healthz` でヘルスチェックを確認できます。APIのベースURLは `http://localhost:8080/apis` です。
+起動後、別のターミナルまたはブラウザから `http://localhost:8080/healthz` にアクセスして、ヘルスチェックを確認できます。PowerShellでは次のコマンドでも確認できます。
+
+```powershell
+Invoke-RestMethod http://localhost:8080/healthz
+```
+
+APIのベースURLは `http://localhost:8080/apis` です。
 
 ### 3. フロントエンドを起動する（ターミナル3）
 
