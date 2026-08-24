@@ -1,0 +1,2 @@
+ALTER TABLE training_problems
+    MODIFY COLUMN slot VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL;

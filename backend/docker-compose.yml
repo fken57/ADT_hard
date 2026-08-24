@@ -1,0 +1,15 @@
+services:
+  mariadb:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: atcoder_shojin
+      MARIADB_USER: shojin
+      MARIADB_PASSWORD: replace-me
+      MARIADB_ROOT_PASSWORD: replace-root-password
+    ports:
+      - "3306:3306"
+    volumes:
+      - shojin-db:/var/lib/mysql
+volumes:
+  shojin-db:
+

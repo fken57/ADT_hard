@@ -1,0 +1,6 @@
+backend/.env
+react-sample-app/.env
+react-sample-app/node_modules/
+react-sample-app/build/
+*.log
+.cache/
